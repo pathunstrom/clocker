@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --text-color: light-dark(#333, #ccc);
+      --background-color: light-dark(#ccc, #333);
+      --card-color: light-dark(#bbb, #444);
+      --positive-complete-color: light-dark(lightgreen, darkgreen);
+      --negative-complete-color: light-dark(palevioletred, maroon);
+    }
+
+    body {
+      display: grid;
+      grid-template-areas:
+          "t t"
+          "a c";
+      grid-template-columns: 250px 1fr;
+    }
+
+    h1 {
+      grid-area: t;
+      text-align: center;
+    }
+
+    #add-pane {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 1em;
+    }
+
+    #clocks {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5em;
+    }
+
+    .clock {
+      display: grid;
+      grid-template-areas: "t t t"
+                           "c c c"
+                           "r d i";
+      grid-template-columns: 1fr 1fr 1fr;
+      width: max-content;
+      padding: 1em;
+      align-content: center;
+      background-color: var(--card-color);
+      gap: 0.25em;
+    }
+
+    .clock.complete.positive {
+      background-color: var(--positive-complete-color);
+    }
+
+    .clock.complete.negative {
+      background-color: var(--negative-complete-color);
+    }
+
+    .clock h2 {
+      grid-area: t;
+      margin: 0 0 0.5em;
+    }
+
+    .clock button {
+      height: 100%;
+    }
+
+    .clock .delete {
+      grid-area: d;
+    }
+
+    .clock .reduce {
+      grid-area: r;
+    }
+
+    .clock .increase {
+      grid-area: i;
+    }
+
+    .clock canvas {
+      grid-area: c;
+    }
+  </style>
+</head>
+<body>
+<template id="clock-template">
+  <div class="clock new" data-segments="4" data-filled="0">
+    <h2>My Other Clock</h2>
+    <canvas height=225 width=225>
+    </canvas>
+    <button class="delete">
+      Delete
+    </button>
+    <button class="reduce">
+      Reduce
+    </button>
+    <button class="increase">
+      Increase
+    </button>
+  </div>
+</template>
+<h1>Forged In The Dark Clocks</h1>
+<section id="add-pane">
+  <label for="input-title">Clock Label</label>
+  <input id="input-title" placeholder="Clock Title">
+  <label for="input-segments">Number of Segments</label>
+  <input type=number id="input-segments" value="4">
+  <label for="input-positive">Postive Clock?</label>
+  <input id="input-positive" type="checkbox" checked>
+  <input type=button value="Create Clock" id="input-submit">
+</section>
+<section id="clocks">
+
+</section>
+
+
+<script>
+  const tau = Math.PI * 2
+  const up = [0, -1]
+
+  const setInterfaceState = (clock) => {
+    let segments = parseInt(clock.dataset.segments)
+    let filled = parseInt(clock.dataset.filled)
+    let increase = clock.getElementsByClassName("increase")[0];
+    increase.disabled = filled >= segments;
+    let reduce = clock.getElementsByClassName("reduce")[0];
+    reduce.disabled = filled <= 0
+    if (filled >= segments) {
+      clock.classList.add("complete");
+    } else {
+      clock.classList.remove("complete");
+    }
+  }
+
+  const setupClock = (clock, segments, title, isPositive) => {
+    clock.dataset.segments = String(segments)
+
+    clock.querySelector("h2").innerText = title
+
+    if (isPositive) {
+      clock.classList.add("positive")
+    } else {
+      clock.classList.add("negative")
+    }
+
+    let increase = clock.getElementsByClassName("increase")[0];
+    increase.addEventListener("click", increaseClock);
+
+    let reduce = clock.getElementsByClassName("reduce")[0];
+    reduce.addEventListener("click", decreaseClock);
+
+    let deleteButton = clock.getElementsByClassName("delete")[0];
+    deleteButton.addEventListener("click", deleteClock);
+
+    renderClock(clock);
+    setInterfaceState(clock);
+    clock.classList.remove("new")
+  }
+
+  const increaseClock = (event) => {
+    const button = event.target;
+    const clock = button.parentElement;
+    clock.dataset.filled = String(parseInt(clock.dataset.filled) + 1);
+    setInterfaceState(clock);
+    renderClock(clock);
+  }
+
+  const decreaseClock = (event) => {
+    const button = event.target;
+    const clock = button.parentElement;
+    clock.dataset.filled = String(parseInt(clock.dataset.filled) - 1);
+    setInterfaceState(clock);
+    renderClock(clock);
+  }
+
+  const deleteClock = (event) => {
+    const button = event.target;
+    const clock = button.parentElement;
+    clock.parentElement.removeChild(clock);
+  }
+
+  let renderClock = (clock) => {
+    let canvas = clock.querySelector("canvas");
+    let context = canvas.getContext("2d");
+    let color = window.getComputedStyle(canvas).color;
+    let center = Math.ceil(canvas.width / 2);
+    let radius = center - (center * .1);
+
+    let segments = clock.dataset.segments;
+    let filled = clock.dataset.filled;
+    let s = segments == 1 ? "" : "s"
+    canvas.innerText = `${segments} segment${s} with ${filled} filled.`
+
+    let radiansPerSector = tau / segments;
+
+    let radiansFilled = radiansPerSector * filled;
+
+    context.clearRect(0, 0, canvas.width, canvas.height);
+
+    context.lineWidth = Math.max(canvas.width * 0.005, 1);
+    context.fillStyle = color;
+    context.strokeStyle = color;
+
+    context.beginPath();
+    context.arc(center, center, radius, 0, tau);
+    context.stroke();
+
+    context.beginPath();
+    context.moveTo(center, center);
+    context.lineTo(...up.map(n=>n*radius+center));
+    context.arc(center, center, radius, -tau/4, radiansFilled - (tau/4));
+    context.closePath();
+    context.fill();
+
+    context.beginPath();
+    for (let i=0;i<segments;i++) {
+      context.moveTo(center, center);
+      let rotationRadians = radiansPerSector * i;
+      let position = rotateVector(up, rotationRadians).map(n=>(n*radius)+center)
+      context.lineTo(position[0], position[1]);
+    }
+    context.stroke();
+
+  }
+
+  let createClock = (event) => {
+    let addPane = event.target.parentElement;
+    let clocks = document.getElementById("clocks");
+    let template = document.getElementById("clock-template").content.cloneNode(true);
+    clocks.appendChild(template);
+    let newClock = clocks.querySelector(".new")
+    let titleInput = addPane.querySelector("#input-title")
+    let title = titleInput.value
+    titleInput.value = ""
+
+    let segmentsInput = addPane.querySelector("#input-segments")
+    let segments = segmentsInput.value;
+    segmentsInput.value = 4;
+
+    let positiveInput = addPane.querySelector("#input-positive")
+    setupClock(newClock, segments, title, positiveInput.checked)
+  };
+
+  let rotateVector = (vec, ang) => {
+    let cos = Math.cos(ang);
+    let sin = Math.sin(ang);
+    return [vec[0] * cos - vec[1] * sin, vec[0] * sin + vec[1] * cos];
+  };
+
+  const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+  darkModeMediaQuery.addEventListener("change", () => {
+    Array.from(document.getElementsByClassName("clock")).forEach((clock)=>renderClock(clock));
+  });
+
+  window.addEventListener("DOMContentLoaded", ()=>{
+    document.getElementById("input-submit").addEventListener("click", createClock)
+  })
+</script>
+</body>
+</html>
