@@ -12,14 +12,18 @@ If you have python on your computer you can also go the directory with index.htm
 
 ## Features
 
-A simple form on the left side of the screen allows you to enter a title (optional),
-a number of segments,
-and whether the clock is "positive" or "negative".
+Fill in form to create clocks.
+Hit increase or reduce to fill segments or clear them.
+When a clock is full it will change color (depending on the settings provided when it was created.)
 
-This creates a clock card.
-Hit increase to add to the segments.
-Press Reduce to erase a segment.
-When you're done with a clock, hit delete to remove it from the ui.
+Form and header are sticky, the clocks are scrollable.
+
+On Mobile, the form occupies the bottom of the screen.
+On tablets and desktop layouts, it occupies the left side of the screen.
+
+Press Hide Form to hide the inputs.
+The Add Clock label and the Show Form button will be visible.
+Press Show Form to show the form again.
 
 ## License
 
@@ -37,6 +41,5 @@ Software copyright Piper Thunstrom 2024
 
 ## TODO
 
-1. Mobile layout. Currently optimized for desktop use.
-2. Clock Export
-3. Clock Import
+1. Clock Export
+2. Clock Import

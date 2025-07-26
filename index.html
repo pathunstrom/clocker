@@ -11,12 +11,13 @@ OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 -->
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns="http://www.w3.org/1999/html">
 <head>
   <meta charset="UTF-8">
   <title>Clocker</title>
   <meta name="author" content="Piper Thunstrom">
   <meta name="description" content="A self-contained Forged in the Dark clock tracker.">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     :root {
       color-scheme: light dark;
@@ -25,19 +26,32 @@ OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
       --card-color: light-dark(#bbb, #444);
       --positive-complete-color: light-dark(lightgreen, darkgreen);
       --negative-complete-color: light-dark(palevioletred, maroon);
+      font-size: 12pt;
     }
 
     body {
       display: grid;
       grid-template-areas:
-          "t t"
-          "a c";
-      grid-template-columns: 250px 1fr;
+        "t"
+        "c"
+        "a"
+      ;
+      grid-template-rows: auto 1fr auto;
+      height: 96vh
     }
 
     h1 {
       grid-area: t;
       text-align: center;
+      font-size: 1.7em;
+    }
+
+    button {
+      min-height: 44px;
+    }
+
+    input, label {
+      min-height: 22px;
     }
 
     #add-pane {
@@ -45,12 +59,33 @@ OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
       flex-direction: column;
       gap: 10px;
       padding: 1em;
+      grid-area: a;
+
+      h2 {
+        margin: 0 auto 0.5em auto;
+      }
+
+      #show-form {
+        display: None;
+      }
+    }
+
+    #add-pane.hidden {
+      * {
+        display: none;
+      }
+      h2, #show-form {
+        display: block;
+      }
     }
 
     #clocks {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5em;
+      grid-area: c;
+      overflow-y: scroll;
+
+      .clock {
+        margin: 0.5em auto;
+      }
     }
 
     .clock {
@@ -64,6 +99,7 @@ OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
       align-content: center;
       background-color: var(--card-color);
       gap: 0.25em;
+      height: min-content;
     }
 
     .clock.complete.positive {
@@ -98,6 +134,28 @@ OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
     .clock canvas {
       grid-area: c;
     }
+
+    @media screen and (min-width: 540px) {
+      body {
+        display: grid;
+        grid-template-areas:
+            "t t"
+            "a c";
+        grid-template-columns: 250px 1fr;
+        gap: 1em;
+      }
+
+      #clocks {
+        display: flex;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        gap: 0.75em;
+
+        .clock {
+          margin: 0;
+        }
+      }
+    }
   </style>
 </head>
 <body>
@@ -119,13 +177,16 @@ OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 </template>
 <h1>Forged In The Dark Clocks</h1>
 <section id="add-pane">
+  <h2>Add Clock</h2>
   <label for="input-title">Clock Label</label>
   <input id="input-title" placeholder="Clock Title">
   <label for="input-segments">Number of Segments</label>
   <input type=number id="input-segments" value="4">
   <label for="input-positive">Postive Clock?</label>
   <input id="input-positive" type="checkbox" checked>
-  <input type=button value="Create Clock" id="input-submit">
+  <button type=button id="input-submit">Create Clock</button>
+  <button type="button" id="hide-form">Hide Form</button>
+  <button type="button" id="show-form">Show Form</button>
 </section>
 <section id="clocks">
 
@@ -273,6 +334,11 @@ OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
   window.addEventListener("DOMContentLoaded", ()=>{
     document.getElementById("input-submit").addEventListener("click", createClock)
   })
+  let addPane = document.getElementById("add-pane")
+  let showForm = document.getElementById("show-form")
+  let hideForm = document.getElementById("hide-form")
+  hideForm.addEventListener("click", (e)=>{addPane.classList.add("hidden")})
+  showForm.addEventListener("click", (e)=>{addPane.classList.remove("hidden")})
 </script>
 </body>
 </html>
